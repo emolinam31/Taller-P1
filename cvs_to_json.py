@@ -4,9 +4,9 @@ import json
 df = pd.read_csv('movies_initial.csv')
 
 # Guardar el dataframe como JSON
-df.to_json('movies_initial.json', orient='records')
+df.to_json('movies.json', orient='records')
 
-with open('movies_initial.json', "r") as file:
+with open('movies.json', "r") as file:
     movies = json.load(file)
 
 for i in range(100):
