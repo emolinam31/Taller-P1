@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+{%block content%}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +27,8 @@
                     <img class="card-img-top" src="{{ movie.image.url }}" alt="{{ movie.title }}">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">{{ movie.title }}</h5>
+                        <p class="card-text">{{ movie.genre }}</p>
+                        <p class="card-text">{{ movie.year }}</p>
                         <p class="card-text">{{ movie.description }}</p>
                         {% if movie.url %}
                         <a href="{{ movie.url }}" class="btn btn-primary">Movie Link</a>
@@ -36,3 +41,4 @@
     </div>
 </body>
 </html>
+{%endblock content%}
