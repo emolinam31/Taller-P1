@@ -7,7 +7,9 @@ import io
 import urllib, base64
 
 def home(request):
-    return render(request, "home.html")  # Asegúrate de tener una plantilla home.html
+    movies = Movie.objects.all()
+    return render(request, "home.html", {'movies': movies})
+   
 
 def about(request):
     return render(request, "about.html")
@@ -78,3 +80,7 @@ def statistics_views(request):
     graphic_genre = base64.b64encode(image_png_mpg).decode('utf-8')
 
     return render(request, 'statistics.html', {'graphic_year': graphic_year, 'graphic_genre': graphic_genre})
+
+def signup(request):
+    email = request.GET.get("email")
+    return render(request, 'signup.html', {'email': email})
