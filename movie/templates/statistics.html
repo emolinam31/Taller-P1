@@ -2,12 +2,11 @@
 {% block content %}
 
 <body>
-    <h3>Movie per year chart</h3>
-    <img src='data:image/png;base64,{{ graphic }}' alt="Movies per year chart">
+    <h3>Movies per Year Chart</h3>
+    <img src='data:image/png;base64,{{ graphic_year }}' alt="Movies per Year Chart">
 
-    
-
+    <h3>Movies by Genre Chart</h3>
+    <img src='data:image/png;base64,{{ graphic_genre }}' alt="Movies by Genre Chart">
 </body>
-
 
 {% endblock %}
