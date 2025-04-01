@@ -27,7 +27,9 @@ urlpatterns = [
     path("about/", movieViews.about, name="about"),
     path("news/", newsViews.news, name="news"),
     path("statistics/", movieViews.statistics_views, name="statistics"),
-    path("signup/", movieViews.signup, name="signup")
+    path("signup/", movieViews.signup, name="signup"),
+    #path("login/", movieViews.login, name="login"),
+    path("iarecommendation/", movieViews.iarecommendation, name="iarecommendation"),
     
     
 ]

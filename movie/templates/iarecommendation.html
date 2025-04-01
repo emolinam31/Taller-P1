@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Welcome To The IA Recommendation Page</h1>
+
+   
+    <form method="GET" action="{% url 'iarecommendation' %}">
+        <div class="mb-3">
+            <label for="prompt" class="form-label">Search for Movie (Prompt):</label>
+            <input type="text" class="form-control" id="prompt" name="prompt" placeholder="Enter your prompt here" value="{{ prompt }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    
+    <div class="mt-5">
+        {% if best_movie %}
+            <h2>Recommended Movie:</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ best_movie.title }}</h5>
+                    <p class="card-text">{{ best_movie.description }}</p>
+                    <p><strong>Similarity:</strong> {{ max_similarity|floatformat:2 }}</p>
+                </div>
+            </div>
+        {% else %}
+            <p>No movie found matching your prompt.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}
