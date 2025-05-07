@@ -93,9 +93,34 @@ def signup(request):
 
 
 def iarecommendation(request):
-    # Cargar la API Key
-    load_dotenv('openAI.env')
-    client = OpenAI(api_key=os.environ.get('openai_apikey'))
+    # Cargar la API Key desde múltiples posibles fuentes
+    # 1. Obtener ruta al archivo de configuración
+    api_key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'api_keys.env')
+    
+    # 2. Intentar cargar desde el archivo
+    if os.path.exists(api_key_file):
+        load_dotenv(api_key_file)
+    
+    # 3. Intentar obtener la clave API de diferentes formas
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        api_key = os.environ.get('openai_apikey')
+    
+    # 4. Si aún no se encuentra, leer directamente del archivo
+    if not api_key and os.path.exists(api_key_file):
+        try:
+            with open(api_key_file, 'r') as file:
+                for line in file:
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        if key.lower() in ['openai_api_key', 'api_key', 'openai_apikey']:
+                            api_key = value.strip()
+        except Exception as e:
+            print(f"Error leyendo API key: {e}")
+    
+    # 5. Inicializar cliente de OpenAI con la clave obtenida
+    client = OpenAI(api_key=api_key)
 
     # Función para calcular similitud de coseno
     def cosine_similarity(a, b):
