@@ -135,3 +135,5 @@ STATICFILES_DIRS = [
     "moviereviews/static/"
 ]
 
+
+ALLOWED_HOSTS = ["34.238.244.46"]
