@@ -91,69 +91,83 @@ def signup(request):
     return render(request, 'signup.html', {'email': email})
 
 
-
 def iarecommendation(request):
-    # Cargar la API Key desde múltiples posibles fuentes
-    # 1. Obtener ruta al archivo de configuración
-    api_key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'api_keys.env')
+    try:
+        # Crear archivo de ejemplo para asegurar tener la API key correcta
+        api_key_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'api_keys.env')
+        
+        # Obtener la API key directamente desde una variable de entorno temporal
+        # Reemplaza esto con tu API key real de OpenAI
+        api_key = "tu_api_key_real_de_openai_aquí"
+        
+        # Si no se proporcionó una API key manualmente, intentar leerla desde el archivo
+        if not api_key or api_key == "tu_api_key_real_de_openai_aquí":
+            try:
+                # Intentar cargar con dotenv primero
+                load_dotenv(api_key_path)
+                api_key = os.environ.get('OPENAI_API_KEY')
+                
+                # Si no funciona, leer directamente del archivo
+                if not api_key and os.path.exists(api_key_path):
+                    with open(api_key_path, 'r') as file:
+                        content = file.read().strip()
+                        for line in content.split('\n'):
+                            if '=' in line:
+                                key, value = line.split('=', 1)
+                                key = key.strip()
+                                if key.upper() == 'OPENAI_API_KEY':
+                                    api_key = value.strip()
+                                    # Eliminar comillas si existen
+                                    if (api_key.startswith('"') and api_key.endswith('"')) or \
+                                       (api_key.startswith("'") and api_key.endswith("'")):
+                                        api_key = api_key[1:-1]
+            except Exception as e:
+                print(f"Error leyendo API key del archivo: {e}")
+        
+        # Inicializar cliente OpenAI con la API key
+        client = OpenAI(api_key=api_key)
+
+        # Función para calcular similitud de coseno
+        def cosine_similarity(a, b):
+            return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+        # Recibir el prompt del usuario desde el formulario
+        prompt = request.GET.get("prompt", "")  # Obtiene el valor del formulario (GET)
+
+        best_movie = None
+        max_similarity = -1
+
+        if prompt:  # Solo procesar si el usuario ingresó un prompt
+            # Generar embedding del prompt
+            response = client.embeddings.create(
+                input=[prompt],
+                model="text-embedding-3-small"
+            )
+            prompt_emb = np.array(response.data[0].embedding, dtype=np.float32)
+
+            # Recorrer la base de datos y comparar
+            for movie in Movie.objects.all():
+                movie_emb = np.frombuffer(movie.emb, dtype=np.float32)
+                similarity = cosine_similarity(prompt_emb, movie_emb)
+
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    best_movie = movie
+
+        # Preparar el contexto para la plantilla
+        context = {
+            'prompt': prompt,
+            'best_movie': best_movie,
+            'max_similarity': max_similarity if best_movie else None,
+        }
+
+        return render(request, 'iarecommendation.html', context)
     
-    # 2. Intentar cargar desde el archivo
-    if os.path.exists(api_key_file):
-        load_dotenv(api_key_file)
-    
-    # 3. Intentar obtener la clave API de diferentes formas
-    api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key:
-        api_key = os.environ.get('openai_apikey')
-    
-    # 4. Si aún no se encuentra, leer directamente del archivo
-    if not api_key and os.path.exists(api_key_file):
-        try:
-            with open(api_key_file, 'r') as file:
-                for line in file:
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        key = key.strip()
-                        if key.lower() in ['openai_api_key', 'api_key', 'openai_apikey']:
-                            api_key = value.strip()
-        except Exception as e:
-            print(f"Error leyendo API key: {e}")
-    
-    # 5. Inicializar cliente de OpenAI con la clave obtenida
-    client = OpenAI(api_key=api_key)
-
-    # Función para calcular similitud de coseno
-    def cosine_similarity(a, b):
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-    # Recibir el prompt del usuario desde el formulario
-    prompt = request.GET.get("prompt", "")  # Obtiene el valor del formulario (GET)
-
-    best_movie = None
-    max_similarity = -1
-
-    if prompt:  # Solo procesar si el usuario ingresó un prompt
-        # Generar embedding del prompt
-        response = client.embeddings.create(
-            input=[prompt],
-            model="text-embedding-3-small"
-        )
-        prompt_emb = np.array(response.data[0].embedding, dtype=np.float32)
-
-        # Recorrer la base de datos y comparar
-        for movie in Movie.objects.all():
-            movie_emb = np.frombuffer(movie.emb, dtype=np.float32)
-            similarity = cosine_similarity(prompt_emb, movie_emb)
-
-            if similarity > max_similarity:
-                max_similarity = similarity
-                best_movie = movie
-
-    # Preparar el contexto para la plantilla
-    context = {
-        'prompt': prompt,
-        'best_movie': best_movie,
-        'max_similarity': max_similarity if best_movie else None,
-    }
-
-    return render(request, 'iarecommendation.html', context)
+    except Exception as e:
+        # Manejo de errores para mostrar información útil al usuario
+        error_message = f"Error al procesar la recomendación: {str(e)}"
+        context = {
+            'prompt': request.GET.get("prompt", ""),
+            'error_message': error_message
+        }
+        return render(request, 'iarecommendation.html', context)
